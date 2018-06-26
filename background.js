@@ -10,6 +10,29 @@ function parsePostedString(string) {
   return result;
 }
 
+function printObject(obj, groupName) {
+
+  chrome.tabs.executeScript({
+    code : 'console.groupCollapsed("' + (groupName ? groupName : 'Details') + '")'
+  });
+
+  for (var key in obj) {
+    if (key == 'requestBody') {
+      printObject(obj[key], key)
+    } else if (key == 'formData') {
+      printObject(obj[key], key)
+    } else {
+      chrome.tabs.executeScript({
+        code : 'console.log("' + key + ': ' + obj[key] + '")'
+      });
+    }
+  }
+  chrome.tabs.executeScript({
+    code : 'console.groupEnd()'
+  });
+
+}
+
 function getInfoDiv(params) {
   var createDiv = 'var elDiv=document.createElement("div"); elDiv.id="stat_params"; elDiv.style="height: 100px; background-color: #00ff80;"; ';
   var addDiv = createDiv + " document.body.insertBefore(elDiv, document.body.firstChild); ";
