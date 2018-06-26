@@ -10,6 +10,16 @@ function parsePostedString(string) {
   return result;
 }
 
+function getInfoDiv(params) {
+  var createDiv = 'var elDiv=document.createElement("div"); elDiv.id="stat_params"; elDiv.style="height: 100px; background-color: #00ff80;"; ';
+  var addDiv = createDiv + " document.body.insertBefore(elDiv, document.body.firstChild); ";
+  var command = "var div = document.getElementById('stat_params'); if (!div) {" + addDiv + "}";
+  command += "var div=document.getElementById('stat_params'); var textnode = document.createTextNode(\"Water\");  div.appendChild(textnode);";
+  //"document.body.style.backgroundColor='red'"
+  //<div style="height: 100px; background-color: #00ff80;">sssssss</div>
+  return command;
+}
+
 
 /* The Web Request API */
 const WEB_REQUEST = chrome.webRequest;
@@ -19,8 +29,10 @@ WEB_REQUEST.onBeforeRequest.addListener(function(details) {
     if (details.method == "POST") {
       if (regExp.test(details.url)) {
         var statisticID = regExp.exec(details.url)[1];
-        statisticParams[statisticID] = {};
         console.log('statisticID: ', statisticID);
+        if (!statisticParams[statisticID]) {
+          statisticParams[statisticID] = {};
+        }
         if (Array.isArray(details.requestBody.raw)) {
           var postedString = decodeURIComponent(
             String.fromCharCode.apply(null, new Uint8Array(details.requestBody.raw[0].bytes))
@@ -44,12 +56,30 @@ WEB_REQUEST.onBeforeRequest.addListener(function(details) {
         console.log(statisticParams);
         var str = "console.log('Statistic params: " + JSON.stringify(statisticParams) + "');";
         console.log(str);
-        chrome.tabs.executeScript(
-          details.tabId,
-          {
-            code: "console.log('Statistic params: " + JSON.stringify(statisticParams) + "');"
-          }
-        );
+
+        var keys = Object.keys(statisticParams);
+        for (var i=0; i<keys.length; i++) {
+          chrome.tabs.executeScript(
+            details.tabId,
+            {
+              code: "console.log('" + keys[i] + ": " + JSON.stringify(statisticParams[keys[i]]) + "');"
+            }
+          );
+
+        }
+        // console.log(Object.keys(statisticParams));
+        // chrome.tabs.executeScript(
+        //   details.tabId,
+        //   {
+        //     code: "console.log('Statistic params: " + JSON.stringify(statisticParams) + "');"
+        //   }
+        // );
+        // chrome.tabs.executeScript(
+        //   details.tabId,
+        //   {
+        //     code: getInfoDiv(statisticParams)
+        //   }
+        // );
       }
     }
     //console.log('POST: ', JSON.stringify(details));
